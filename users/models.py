@@ -30,7 +30,7 @@ class User(models.Model):
     password = models.CharField(max_length=30)
     role = models.CharField(choices=UserRoles.choises, default='member', max_length=12)
     location = models.ManyToManyField(Location)
-    age = models.SmallIntegerField
+    age = models.SmallIntegerField(null=True)
 
     class Meta:
         verbose_name = 'Пользователь'

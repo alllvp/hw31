@@ -130,6 +130,24 @@ class AdCreateView(View):
                              }, safe=False,
                             json_dumps_params={'ensure_ascii': False})
 
+@method_decorator(csrf_exempt, name='dispatch')
+class AdUpdateView(UpdateView):
+    model = Ad
+    fields = ['name', 'author', 'category', 'price', 'description']
+
+    def patch(self, request, *args, **kwargs):
+        super().post(request, *args, **kwargs)
+        data = json.loads(request.body)
+        self.object.name = data['name'] if 'name' in data else self.object.name
+        self.object.author_id = data['author_id'] if 'author_id' in data else self.object.author
+        self.object.category_id = data['category_id'] if 'category_id' in data else self.object.category
+        self.object.price = data['price'] if 'price' in data else self.object.price
+        self.object.description = data['description'] if 'description' in data else self.object.description
+        self.object.is_published = data['is_published'] if 'is_published' in data else self.object.is_published
+        self.object.save()
+        return JsonResponse({'id': self.object.id, 'name': self.object.name}, safe=False,
+                            json_dumps_params={'ensure_ascii': False})
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class AdUploadImageView(UpdateView):
@@ -152,6 +170,15 @@ class AdUploadImageView(UpdateView):
                             json_dumps_params={'ensure_ascii': False})
 
 
+@method_decorator(csrf_exempt, name='dispatch')
+class AdDeleteView(DeleteView):
+    model = Ad
+    success_url = '/'
+    def delete(self, request, *args, **kwargs):
+        super().delete(request, *args, **kwargs)
+        return JsonResponse({"status": "ok"}, status=204)
+
+
 class AdDetailView(DetailView):
     model = Ad
 
@@ -159,7 +186,7 @@ class AdDetailView(DetailView):
         ad = self.get_object()
         return JsonResponse({'id': ad.id,
                              'name': ad.name,
-                             'author': ad.author,
+                             'author': ad.author.username,
                              'price': ad.price,
                              'description': ad.description,
                              'is_published': ad.is_published}, safe=False,

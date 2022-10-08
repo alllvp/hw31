@@ -20,7 +20,7 @@ class Ad(models.Model):
     description = models.TextField(null=True)
     is_published = models.BooleanField(default=False)
     image = models.ImageField(upload_to='pictures', null=True, blank=True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, related_name='ads', null=True)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='ads', null=False)
     def __str__(self):
         return self.name
 
