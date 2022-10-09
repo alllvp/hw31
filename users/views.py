@@ -29,16 +29,17 @@ class UserListView(ListView):
                            'last_name': user.last_name,
                            'role': user.role,
                            'age': user.age,
-                           'ads_count': user.ads.count()
+                           'ads_count': user.ads.count(),
+                           'location': [str(u) for u in user.location.all()]
                            })
-        return JsonResponse({'ads': result, 'pages': page_obj.number, 'total': page_obj.paginator.count},
+        return JsonResponse({'users': result, 'pages': page_obj.number, 'total': page_obj.paginator.count},
                             safe=False, json_dumps_params={'ensure_ascii': False})
 
 
 @method_decorator(csrf_exempt, name='dispatch')
 class UserCreateView(CreateView):
     model = User
-    fields = ['username', 'password', 'first_name', 'last_name', 'role', 'locations']
+    fields = ['username', 'password', 'first_name', 'last_name', 'role', 'location']
 
     def post(self, request, *args, **kwargs):
         data = json.loads(request.body)
@@ -48,9 +49,10 @@ class UserCreateView(CreateView):
             first_name=data['first_name'],
             last_name=data['last_name'],
             role=data['role'],
-            password=['password']
+            password=data['password'],
+            age=data['age']
         )
-        for loc in data['locations']:
+        for loc in data['location']:
             location, _ = Location.objects.get_or_create(name=loc)
             user.location.add(location)
 
