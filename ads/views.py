@@ -6,14 +6,20 @@ from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DetailView, CreateView, UpdateView, DeleteView
-from rest_framework.generics import ListAPIView
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.generics import ListAPIView, RetrieveAPIView, DestroyAPIView, UpdateAPIView, CreateAPIView
+from rest_framework.permissions import IsAuthenticated
 
-from ads.models import Category, Ad
-from ads.serializers import AdListSerializer
+from ads.models import Category, Ad, Selection
+from ads.permissions import IsAdOwnerOrModerator, IsSelectionOwnerOrAdmin
+from ads.serializers import AdListSerializer, AdDetailSerializer, SelectionCreateSerializer, SelectionListSerializer, \
+    SelectionDetailSerializer, AdUpdateSerializer
 from users.models import User
 
 
 # Create your views here.
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def root(request):
     return JsonResponse({'status': 'ok'}, status=HttpResponse.status_code)
 
@@ -134,23 +140,16 @@ class AdCreateView(View):
                             json_dumps_params={'ensure_ascii': False})
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class AdUpdateView(UpdateView):
-    model = Ad
-    fields = ['name', 'author', 'category', 'price', 'description']
+class AdUpdateView(UpdateAPIView):
+    queryset = Ad.objects.all()
+    permission_classes = [IsAuthenticated, IsAdOwnerOrModerator]
+    serializer_class = AdUpdateSerializer
 
-    def patch(self, request, *args, **kwargs):
-        super().post(request, *args, **kwargs)
-        data = json.loads(request.body)
-        self.object.name = data['name'] if 'name' in data else self.object.name
-        self.object.author_id = data['author_id'] if 'author_id' in data else self.object.author
-        self.object.category_id = data['category_id'] if 'category_id' in data else self.object.category
-        self.object.price = data['price'] if 'price' in data else self.object.price
-        self.object.description = data['description'] if 'description' in data else self.object.description
-        self.object.is_published = data['is_published'] if 'is_published' in data else self.object.is_published
-        self.object.save()
-        return JsonResponse({'id': self.object.id, 'name': self.object.name}, safe=False,
-                            json_dumps_params={'ensure_ascii': False})
+
+class AdDeleteView(DestroyAPIView):
+    queryset = Ad.objects.all()
+    permission_classes = [IsAuthenticated, IsAdOwnerOrModerator]
+    serializer_class = AdUpdateSerializer
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -177,25 +176,34 @@ class AdUploadImageView(UpdateView):
                             json_dumps_params={'ensure_ascii': False})
 
 
-@method_decorator(csrf_exempt, name='dispatch')
-class AdDeleteView(DeleteView):
-    model = Ad
-    success_url = '/'
-
-    def delete(self, request, *args, **kwargs):
-        super().delete(request, *args, **kwargs)
-        return JsonResponse({"status": "ok"}, status=204)
+class AdDetailView(RetrieveAPIView):
+    queryset = Ad.objects.all()
+    serializer_class = AdDetailSerializer
+    permission_classes = [IsAuthenticated]
 
 
-class AdDetailView(DetailView):
-    model = Ad
+class SelectionCreateView(CreateAPIView):
+    queryset = Selection.objects.all()
+    serializer_class = SelectionCreateSerializer
+    permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        ad = self.get_object()
-        return JsonResponse({'id': ad.id,
-                             'name': ad.name,
-                             'author': ad.author.username,
-                             'price': ad.price,
-                             'description': ad.description,
-                             'is_published': ad.is_published}, safe=False,
-                            json_dumps_params={'ensure_ascii': False})
+
+class SelectionUpdateView(UpdateAPIView):
+    queryset = Selection.objects.all()
+    serializer_class = SelectionCreateSerializer
+    permission_classes = [IsAuthenticated, IsSelectionOwnerOrAdmin]
+
+
+class SelectionListView(ListAPIView):
+    queryset = Selection.objects.all()
+    serializer_class = SelectionListSerializer
+
+
+class SelectionDetailView(RetrieveAPIView):
+    queryset = Selection.objects.all()
+    serializer_class = SelectionDetailSerializer
+
+
+class SelectionDeleteView(DestroyAPIView):
+    queryset = Selection.objects.all()
+    serializer_class = SelectionCreateSerializer

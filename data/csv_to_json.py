@@ -1,10 +1,14 @@
 import csv
 import json
 
-DATA_ADS = 'ads.csv'
+DATA_ADS = 'ad.csv'
 JSON_ADS = 'ads.json'
-DATA_CATEGORIES = 'categories.csv'
+DATA_CATEGORIES = 'category.csv'
 JSON_CATEGORIES = 'categories.json'
+DATA_LOCS = 'location.csv'
+JSON_LOCS = 'locations.json'
+DATA_USER = 'user.csv'
+JSON_USER = 'users.json'
 
 
 def convert_file(csv_file, json_file, model_name):
@@ -29,5 +33,4 @@ def convert_file(csv_file, json_file, model_name):
         json_f.write(json.dumps(result, ensure_ascii=False))
 
 
-convert_file(DATA_CATEGORIES, JSON_CATEGORIES, 'ads.category')
-convert_file(DATA_ADS, JSON_ADS, 'ads.ad')
+convert_file(DATA_USER, JSON_USER, 'users.user')
